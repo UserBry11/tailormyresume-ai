@@ -1,26 +1,104 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* PAGE BACKGROUND */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0b0e14; /* deep dark blue-gray */
+  color: #e5e7eb;      /* near-white text */
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* LAYOUT */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* CARD SURFACES */
+.card {
+  background: #141824;              /* clearly lighter than page */
+  border: 1px solid #252a3d;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+/* TYPOGRAPHY */
+h1 {
+  font-size: 28px;
+  margin: 0 0 8px 0;
+}
+
+h2 {
+  font-size: 20px;
+  margin: 0 0 12px 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+.muted {
+  color: #9aa4c7;
+  font-size: 14px;
+}
+
+/* INPUTS */
+.textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 14px 16px;
+  background: #0f1320;              /* darker inset */
+  border: 1px solid #2e3558;
+  border-radius: 12px;
+  color: #f8fafc;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #6ea8fe;
+  background: #0f1426;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 12px 18px;
+  background: #3b82f6;              /* BLUE – clear call to action */
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #2563eb;
+}
+
+.btn:disabled {
+  background: #1f2937;
+  cursor: not-allowed;
+}
+
+/* OUTPUT */
+pre {
+  background: #0f1320;
+  border: 1px solid #2e3558;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  color: #e5e7eb;
 }

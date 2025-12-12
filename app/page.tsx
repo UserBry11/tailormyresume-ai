@@ -1,65 +1,197 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+
+const PAID_KEY = "paid_v1";
+const USAGE_KEY = "usage_v1";
+const FREE_LIMIT = 1;
+
+export default function HomePage() {
+  const [resume, setResume] = useState("");
+  const [jobDesc, setJobDesc] = useState("");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [isPaid, setIsPaid] = useState(false);
+  const [usage, setUsage] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsPaid(localStorage.getItem(PAID_KEY) === "true");
+    setUsage(Number(localStorage.getItem(USAGE_KEY) || 0));
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paid") === "true") {
+      localStorage.setItem(PAID_KEY, "true");
+      setIsPaid(true);
+      window.history.replaceState({}, "", "/");
+    }
+  }, [hydrated]);
+
+  async function handleGenerate() {
+    if (!isPaid && usage >= FREE_LIMIT) {
+      alert("Free resume used. Please upgrade to continue.");
+      return;
+    }
+
+    setLoading(true);
+    setOutput("");
+
+    try {
+      const res = await fetch("/api/tailor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resume,
+          jobDescription: jobDesc
+        })
+      });
+
+      if (!res.ok) throw new Error("API failed");
+
+      const data = await res.json();
+      setOutput(data.text || "No response.");
+
+      const nextUsage = usage + 1;
+      setUsage(nextUsage);
+      localStorage.setItem(USAGE_KEY, String(nextUsage));
+    } catch {
+      setOutput("Error generating tailored resume.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpgrade() {
+    const res = await fetch("/api/tailor/checkout", { method: "POST" });
+    const data = await res.json();
+    window.location.href = data.url;
+  }
+
+  if (!hydrated) return null;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#0a0a0f",
+        color: "#e5e7eb",
+        padding: "48px 20px",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont"
+      }}
+    >
+      <section
+        style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          background: "#0f172a",
+          border: "1px solid #1e293b",
+          borderRadius: 14,
+          padding: 28
+        }}
+      >
+        <h1 style={{ fontSize: 32, marginBottom: 8 }}>
+          AI Resume Tailor
+        </h1>
+
+        <p style={{ color: "#9ca3af", marginBottom: 24 }}>
+          Paste your resume and a job description. Get a tailored resume in seconds.
+          <br />
+          <strong>One free run. $9 unlocks unlimited use.</strong>
+        </p>
+
+        <label style={{ fontWeight: 600 }}>Current Resume</label>
+        <textarea
+          value={resume}
+          onChange={(e) => setResume(e.target.value)}
+          rows={8}
+          style={{
+            width: "100%",
+            marginTop: 6,
+            marginBottom: 18,
+            padding: 12,
+            background: "#020617",
+            color: "#e5e7eb",
+            border: "1px solid #334155",
+            borderRadius: 8
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+
+        <label style={{ fontWeight: 600 }}>Job Description</label>
+        <textarea
+          value={jobDesc}
+          onChange={(e) => setJobDesc(e.target.value)}
+          rows={8}
+          style={{
+            width: "100%",
+            marginTop: 6,
+            marginBottom: 22,
+            padding: 12,
+            background: "#020617",
+            color: "#e5e7eb",
+            border: "1px solid #334155",
+            borderRadius: 8
+          }}
+        />
+
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          style={{
+            padding: "12px 20px",
+            borderRadius: 8,
+            border: "1px solid #334155",
+            background: "#1f2937",
+            color: "#f9fafb",
+            fontSize: 16,
+            cursor: "pointer"
+          }}
+        >
+          {loading ? "Generating..." : "Generate Tailored Resume"}
+        </button>
+
+        {!isPaid && usage >= FREE_LIMIT && (
+          <div style={{ marginTop: 20 }}>
+            <button
+              onClick={handleUpgrade}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 8,
+                border: "none",
+                background: "#2563eb",
+                color: "#ffffff",
+                fontSize: 16,
+                cursor: "pointer"
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+              Unlock Unlimited Resumes ($9)
+            </button>
+          </div>
+        )}
+
+        {output && (
+          <pre
+            style={{
+              marginTop: 32,
+              padding: 20,
+              background: "#020617",
+              color: "#e5e7eb",
+              borderRadius: 10,
+              border: "1px solid #1e293b",
+              whiteSpace: "pre-wrap",
+              fontSize: 14,
+              lineHeight: 1.5
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            {output}
+          </pre>
+        )}
+      </section>
+    </main>
   );
 }
